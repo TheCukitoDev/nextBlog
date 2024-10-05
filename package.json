@@ -6,7 +6,14 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "lint": "next lint",
+    "lint": "biome lint",
+    "check": "biome check",
+    "check:write": "biome check --write",
+    "format:global" : "biome format",
+    "format:src": "biome format ./src",
+    "format": "biome format --write ./src",
+    "format:global:write": "biome format --write",
+    "lint:write": "biome lint --write",
     "start": "next start"
   },
   "dependencies": {
