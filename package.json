@@ -9,7 +9,7 @@
     "lint": "biome lint",
     "check": "biome check",
     "check:write": "biome check --write",
-    "format:global" : "biome format",
+    "format:global": "biome format",
     "format:src": "biome format ./src",
     "format": "biome format --write ./src",
     "format:global:write": "biome format --write",
