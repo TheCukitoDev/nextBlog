@@ -1,7 +1,22 @@
 import '@/styles/globals.css'
 
 import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
+import { JetBrains_Mono } from 'next/font/google'
 import type { Metadata } from 'next'
+import {
+	ClerkProvider,
+	SignInButton,
+	SignedIn,
+	SignedOut,
+	UserButton,
+} from '@clerk/nextjs'
+
+const jetbrains = JetBrains_Mono({
+	weight: 'variable',
+	subsets: ['latin'],
+	fallback: ['monospace'],
+})
 
 export const metadata: Metadata = {
 	title: 'Create T3 App',
@@ -13,8 +28,23 @@ export default function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<html lang="en" className={`${GeistSans.variable}`}>
-			<body>{children}</body>
-		</html>
+		<ClerkProvider>
+			<html
+				lang="en"
+				className={`${GeistSans.variable} ${GeistMono.variable} ${jetbrains.className}`}
+			>
+				<body>
+					<header>
+						<SignedOut>
+							<SignInButton />
+						</SignedOut>
+						<SignedIn>
+							<UserButton />
+						</SignedIn>
+					</header>
+					<main>{children}</main>
+				</body>
+			</html>
+		</ClerkProvider>
 	)
 }
