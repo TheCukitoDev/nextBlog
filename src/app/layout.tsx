@@ -4,6 +4,8 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { JetBrains_Mono } from 'next/font/google'
 import type { Metadata } from 'next'
+import { Skeleton } from '@/components/ui/skeleton'
+
 import {
 	ClerkProvider,
 	SignInButton,
@@ -24,26 +26,71 @@ export const metadata: Metadata = {
 	icons: [{ rel: 'icon', url: '/favicon.ico' }],
 }
 
+import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
+
+import { PHProvider } from '@/components/analytics/providers'
+import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
+
+const PostHogPageView = dynamic(() => import('@/app/PostHogPageView'), {
+	ssr: false,
+})
+
+{
+	/* <body>
+	<header>
+		<SignedOut>
+			<SignInButton />
+		</SignedOut>
+		<SignedIn>
+			<UserButton />
+		</SignedIn>
+		<ThemeToggle />
+	</header>
+	<main>{children}</main>
+</body> */
+}
+
 export default function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
+	const clerkSkeleton = () => {
+		return (
+			<div className="h-7 w-7 flex flex-col justify-center items-center">
+				<Skeleton className="h-full w-full rounded-full dark:bg-white" />
+			</div>
+		)
+	}
+
 	return (
 		<ClerkProvider>
 			<html
 				lang="en"
 				className={`${GeistSans.variable} ${GeistMono.variable} ${jetbrains.className}`}
+				suppressHydrationWarning={true}
 			>
-				<body>
-					<header>
-						<SignedOut>
-							<SignInButton />
-						</SignedOut>
-						<SignedIn>
-							<UserButton />
-						</SignedIn>
-					</header>
-					<main>{children}</main>
-				</body>
+				<head />
+				<PHProvider>
+					<body>
+						<PostHogPageView />
+						<ThemeProvider attribute="class" defaultTheme="system">
+							<header className="flex flex-row items-stretch justify-between px-2 py-2 scroll-m-0">
+								<Suspense fallback={clerkSkeleton()}>
+									<SignedOut>
+										<SignInButton />
+									</SignedOut>
+									<SignedIn>
+										<UserButton />
+									</SignedIn>
+								</Suspense>
+								<ThemeToggle />
+							</header>
+							<main className="">{children}</main>
+							<footer></footer>
+						</ThemeProvider>
+					</body>
+				</PHProvider>
 			</html>
 		</ClerkProvider>
 	)

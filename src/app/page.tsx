@@ -31,6 +31,9 @@ export default function HomePage() {
 							uses, and how to deploy it.
 						</div>
 					</Link>
+					<Link href={'/es-ES/asdas'} locale="es">
+						Hola
+					</Link>
 				</div>
 			</div>
 		</main>
