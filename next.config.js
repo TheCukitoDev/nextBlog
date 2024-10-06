@@ -6,18 +6,14 @@ await import('./src/env.js')
 
 import createNextIntlPlugin from 'next-intl/plugin'
 
-const withNextIntl = createNextIntlPlugin()
-
 /** @type {import("next").NextConfig} */
 const config = {}
-
-const exportedConfig = withNextIntl(config)
 
 // Injected content via Sentry wizard below
 
 import { withSentryConfig } from '@sentry/nextjs'
 
-export default withSentryConfig(exportedConfig, {
+export default withSentryConfig(config, {
 	// For all available options, see:
 	// https://github.com/getsentry/sentry-webpack-plugin#options
 
