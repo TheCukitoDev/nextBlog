@@ -1,10 +1,36 @@
+// Styles
 import '@/styles/globals.css'
+
+// Speed Insights
+
+import { SpeedInsights } from '@vercel/speed-insights/next'
+
+// Fonts
 
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { JetBrains_Mono } from 'next/font/google'
+
+// Metadata
+
 import type { Metadata } from 'next'
-import { Skeleton } from '@/components/ui/skeleton'
+
+// Environment Variables
+
+import { env } from '@/env'
+
+// PostHog
+
+import { PHProvider } from './providers'
+import dynamic from 'next/dynamic'
+
+// Next-themes
+
+import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { useTheme } from 'next-themes'
+
+// Clerk
 
 import {
 	ClerkProvider,
@@ -14,11 +40,24 @@ import {
 	UserButton,
 } from '@clerk/nextjs'
 
+import { auth, currentUser } from '@clerk/nextjs/server'
+import posthog from 'posthog-js'
+
+// Dynamic imports
+
+const PostHogPageView = dynamic(() => import('./PostHogPageView'), {
+	ssr: false,
+})
+
+// Fonts
+
 const jetbrains = JetBrains_Mono({
 	weight: 'variable',
 	subsets: ['latin'],
 	fallback: ['monospace'],
 })
+
+// Metadata
 
 export const metadata: Metadata = {
 	title: 'Create T3 App',
@@ -26,72 +65,54 @@ export const metadata: Metadata = {
 	icons: [{ rel: 'icon', url: '/favicon.ico' }],
 }
 
-import { ThemeProvider } from '@/components/theme/ThemeProvider'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
-
-import { PHProvider } from '@/components/analytics/providers'
-import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
-
-const PostHogPageView = dynamic(() => import('@/app/PostHogPageView'), {
-	ssr: false,
-})
-
-{
-	/* <body>
-	<header>
-		<SignedOut>
-			<SignInButton />
-		</SignedOut>
-		<SignedIn>
-			<UserButton />
-		</SignedIn>
-		<ThemeToggle />
-	</header>
-	<main>{children}</main>
-</body> */
-}
-
-export default function RootLayout({
+export default async function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
-	const clerkSkeleton = () => {
-		return (
-			<div className="h-7 w-7 flex flex-col justify-center items-center">
-				<Skeleton className="h-full w-full rounded-full dark:bg-white" />
-			</div>
-		)
+	const { userId } = auth()
+
+	if (userId) {
+		const user = await currentUser()
+		posthog.identify(userId, {
+			email: user?.emailAddresses[0]?.emailAddress,
+			userId: userId,
+		})
 	}
 
 	return (
 		<ClerkProvider>
-			<html
-				lang="en"
-				className={`${GeistSans.variable} ${GeistMono.variable} ${jetbrains.className}`}
-				suppressHydrationWarning={true}
-			>
-				<head />
-				<PHProvider>
+			<PHProvider>
+				<html
+					lang="en"
+					className={`${GeistSans.variable} ${GeistMono.variable} ${jetbrains.className}`}
+					suppressHydrationWarning={true}
+				>
+					<head />
+
 					<body>
-						<PostHogPageView />
-						<ThemeProvider attribute="class" defaultTheme="system">
+						<ThemeProvider
+							attribute="class"
+							defaultTheme={'system'}
+						>
 							<header className="flex flex-row items-stretch justify-between px-2 py-2 scroll-m-0">
-								<Suspense fallback={clerkSkeleton()}>
-									<SignedOut>
-										<SignInButton />
-									</SignedOut>
-									<SignedIn>
-										<UserButton />
-									</SignedIn>
-								</Suspense>
+								<SignedOut>
+									<SignInButton />
+								</SignedOut>
+								<SignedIn>
+									<UserButton />
+								</SignedIn>
+
 								<ThemeToggle />
 							</header>
-							<main className="">{children}</main>
+							<main className="">
+								{children}
+								<PostHogPageView />
+								<SpeedInsights />
+							</main>
 							<footer></footer>
 						</ThemeProvider>
 					</body>
-				</PHProvider>
-			</html>
+				</html>
+			</PHProvider>
 		</ClerkProvider>
 	)
 }
